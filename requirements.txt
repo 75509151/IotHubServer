@@ -1,0 +1,6 @@
+pymongo
+coreapi
+django_redis
+django
+djangorestframework
+shortuuid
