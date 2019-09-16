@@ -9,7 +9,7 @@ class DeviceSerializer(serializers.Serializer):
     password = serializers.CharField()
     status = serializers.CharField()
     device_status = serializers.CharField()
-    last_status_update = serializers.TimeField() #("最新更新时间")
+    last_status_update = serializers.IntegerField() #("最新更新时间")
     tags = serializers.ListField()
     shadow = serializers.JSONField()
     # shadow = serializers.DictField()
