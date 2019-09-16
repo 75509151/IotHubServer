@@ -1,8 +1,7 @@
 import shortuuid
 from django.shortcuts import render
 from django.conf import settings
-from rest_framework import viewsets
-from rest_framework import mixins
+from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from utils.mongo import Mongo
@@ -16,7 +15,7 @@ mqtt_db = client.mqtt
 devices_clec =  mqtt_db.devices
 
 
-class DeviceView(mixins.ListModelMixin, viewsets.GenericViewSet):
+class DeviceView(APIView):
 
     def post(self, request):
         product_name = request.data["product_name"]
@@ -30,7 +29,6 @@ class DeviceView(mixins.ListModelMixin, viewsets.GenericViewSet):
                             password)
 
         devices_clec.insert_one(new_device.to_doc())
-        serialized = DeviceSerializer(new_device.to_doc())
+        serialized = DeviceSerializer(new_device)
         return Response(serialized.data)
-
 
