@@ -21,10 +21,10 @@ from rest_framework import routers
 from apis import views as aviews
 
 router = routers.DefaultRouter()
-# router.register(r"devices", views.DeviceView, basename="devices")
+router.register(r"devices", aviews.DeviceView, basename="devices")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url(r"devices", aviews.DeviceView.as_view()),
+    # url(r"devices", aviews.DeviceView.as_view()),
     path('', include(router.urls)),
 ]
