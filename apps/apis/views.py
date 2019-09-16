@@ -37,13 +37,14 @@ class DeviceView(mixins.CreateModelMixin,
         password = shortuuid.uuid()
         username = "%s/%s" % (product_name, device_name)
 
-        new_device = Device().init(product_name,
+        new_device = Device(product_name,
                             device_name,
                             username,
                             password)
+        doc = new_device.to_doc()
 
-        new_device.insert_one()
-        serialized = DeviceSerializer(new_device.to_doc())
+        Device.insert_one(doc)
+        serialized = DeviceSerializer(doc)
         return Response(serialized.data)
 
 

@@ -12,7 +12,7 @@ class Device():
     CLIENT = Mongo(settings.MONGO_URL, settings.MONGO_PORT)
     COLLECTION = CLIENT["mqtt"]["device"]
 
-    def init(self, product_name,
+    def __init__(self, product_name,
                  device_name,
                  username,
                  password,
@@ -33,7 +33,6 @@ class Device():
         self.tags = tags if tags is not None else []
         self.tags_version = tags_version
         self.shadow = shadow if shadow is not None else json.dumps({"state": {},"metadata": {},"version":0})
-        return self
 
     def to_doc(self):
         return {"product_name": self.product_name,
@@ -47,6 +46,7 @@ class Device():
                 "tags_version": self.tags_version,
                 "shadow": self.shadow}
 
+
     @classmethod
     def find(cls, condition):
         return cls.COLLECTION.find(condition)
@@ -55,8 +55,9 @@ class Device():
     def find_one(cls, condition=None):
         return cls.COLLECTION.find_one(condition=None)
 
-    def insert_one(self):
-        return Device.COLLECTION.insert_one(self.to_doc())
+    @classmethod
+    def insert_one(cls, doc):
+        return cls.COLLECTION.insert_one(doc)
 
 
 class Connections(object):
