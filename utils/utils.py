@@ -1,6 +1,8 @@
 import functools
 import threading
 
+from .exceptions import *
+
 class Singleton():
     __instance = None
     __lock = threading.Lock()
@@ -16,12 +18,14 @@ class Singleton():
 def get_param(req,param, default):
     return req.query_params.get("param", default)
 
-def gen_condition(req, params):
+def gen_condition(req, params, not_empty=False):
     condition = {}
     for p in params:
         val = req.get(p, None)
         if val is not None:
             condition[p] = val
+        elif not_empty:
+            raise ArgMissError
 
     return condition
 
