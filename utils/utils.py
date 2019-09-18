@@ -1,6 +1,8 @@
 import functools
 import threading
 
+from rest_framework.exceptions import ValidationError
+
 from .exceptions import *
 
 class Singleton():
@@ -25,7 +27,7 @@ def gen_condition(req, params, not_empty=False):
         if val is not None:
             condition[p] = val
         elif not_empty:
-            raise ArgMissError
+            raise ValidationError(p)
 
     return condition
 

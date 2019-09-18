@@ -6,8 +6,11 @@ from django.conf import settings
 from rest_framework import viewsets
 from rest_framework import mixins
 from rest_framework.response import Response
+from rest_framework.exceptions import  NotFound
+from rest_framework.status import HTTP_201_CREATED
 
 from utils.utils import gen_condition
+from utils.res import JsonResponse
 from .models import Device, DeviceAcl, Connections
 from .serializers import DeviceSerializer
 # Create your views here.
@@ -22,9 +25,12 @@ class DeviceView(mixins.CreateModelMixin,
                          "status", "device_status"]
         condition = gen_condition(request.query_params, filter_params)
 
-        device = Device.find(condition)
-        serialized = DeviceSerializer(device, many=True)
-        return Response(serialized.data)
+        devices = Device.find(condition)
+        if devices:
+            serialized = DeviceSerializer(devices, many=True)
+            return JsonResponse(serialized.data)
+        else:
+            return NotFound()
 
     def create(self, request):
         product_name = request.data["product_name"]
@@ -46,7 +52,7 @@ class DeviceView(mixins.CreateModelMixin,
 
         DeviceAcl.insert_one(device_acl.to_doc())
         serialized = DeviceSerializer(device_doc)
-        return Response(serialized.data)
+        return JsonResponse(serialized.data, status=HTTP_201_CREATED)
 
     def delete(self, request):
         #TODO:
@@ -58,8 +64,11 @@ class DeviceView(mixins.CreateModelMixin,
             d = Device(**device)
             d.disconnect()
             d.remove()
-        serialized = DeviceSerializer(device)
-        return Response(serialized.data)
+            serialized = DeviceSerializer(device)
+            return JsonResponse(serialized.data)
+        else:
+            raise NotFound()
+
 
 
 

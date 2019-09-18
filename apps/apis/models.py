@@ -115,6 +115,16 @@ class Device(MongoMixin):
             "pubsub": pubsub
         }
 
+
+    @classmethod
+    def add_connection(cls, msg):
+        pass
+
+    @classmethod
+    def remove_connection(cls, msg):
+        pass
+
+
     def disconnect(self):
         if self._id:
             pass
@@ -153,8 +163,8 @@ class Connections(MongoMixin):
     def __init__(self, client_id, connected,
                  device,
                  connected_at,
-                 keepalive,
-                 ipaddress
+                 keepalive=60,
+                 ipaddress=""
                  ):
         self.client_id = client_id
         self.device = device
@@ -162,3 +172,13 @@ class Connections(MongoMixin):
         self.keepalive = keepalive
         self.ipaddress = ipaddress
         self.connected_at = connected_at
+
+    def to_doc(self):
+        return {"client_id":self.client_id,
+                "device": self.device,
+                "connected": self.connected,
+                "connected_at": self.connected_at,
+                "keepalive": self.keepalive,
+                "ipaddress": self.ipaddress
+                }
+

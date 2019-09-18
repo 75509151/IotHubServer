@@ -4,3 +4,6 @@ django_redis
 django
 djangorestframework
 shortuuid
+kombu==4.5
+librabbitmq
+bson
