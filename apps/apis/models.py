@@ -28,10 +28,19 @@ class MongoMixin():
     def delete_one(cls, condition):
         return cls.COLLECTION.delete_one(condition)
 
-
     @classmethod
     def delete_many(cls, condition):
         return cls.COLLECTION.delete_many(condition)
+
+    @classmethod
+    def replace_one(cls, filter, replacement, upsert=False):
+
+        return cls.COLLECTION.replace_one(filter, replacement, upsert)
+
+
+class DeviceManager():
+    # TODO: device manager
+    pass
 
 
 class Device(MongoMixin):
@@ -62,7 +71,6 @@ class Device(MongoMixin):
         self.shadow = shadow if shadow is not None else json.dumps({"state": {}, "metadata": {}, "version": 0})
         self._id = _id
 
-
     def to_doc(self):
         if self._id:
             return {"product_name": self.product_name,
@@ -87,8 +95,6 @@ class Device(MongoMixin):
                     "tags": self.tags,
                     "tags_version": self.tags_version,
                     "shadow": self.shadow}
-
-
 
     def get_acl(self):
         publish = [
@@ -115,15 +121,43 @@ class Device(MongoMixin):
             "pubsub": pubsub
         }
 
-
     @classmethod
     def add_connection(cls, msg):
-        pass
+        product_name, device_name = msg.get("username", "").split("/")
+        if not product_name or device_name:
+            return
+        condition = {"product_name": product_name,
+                     "device_name": device_name}
+        device = cls.find_one(condition)
+        if device:
+            #TODO:
+            conn = {"client_id": msg["client_id"],
+                   "device": device._id,
+                   "connected": True,
+                   "connected_at": msg["connected_at"],
+                   "keepalive": msg["keepalive"],
+                   "ipaddress": msg["ipaddress"],
+                   "proto_ver": msg["proto_ver"]
+                   }
+            Connections.replace_one(device._id, conn, upsert=True)
 
     @classmethod
     def remove_connection(cls, msg):
-        pass
+        product_name, device_name = msg.get("username", "").split("/")
+        if not product_name or device_name:
+            return
 
+        condition = {"product_name": product_name,
+                     "device_name": device_name}
+        device = cls.find_one(condition)
+        if device:
+            #TODO:
+
+            conn = {"client_id": msg["client_id"],
+                    "device": device._id,
+                    "connected": False,
+                    "disconnected_at": msg["disconnected_at"]}
+            Connections.replace_one(device._id, conn, upsert=True)
 
     def disconnect(self):
         if self._id:
@@ -134,14 +168,15 @@ class Device(MongoMixin):
             _id = ObjectId(self._id)
             Device.delete_one({"_id": _id})
             DeviceAcl.delete_many({"username": self.username})
-            Connections.delete_many({"device":_id})
+            Connections.delete_many({"device": _id})
+
 
 class DeviceAcl(MongoMixin):
     CLIENT = Mongo(settings.MONGO_URL, settings.MONGO_PORT)
     COLLECTION = CLIENT["mqtt"]["device_acl"]
 
     def __init__(self, username, publish,
-                subscribe, pubsub):
+                 subscribe, pubsub):
         self.username = username
         self.publish = publish
         self.subscribe = subscribe
@@ -156,15 +191,17 @@ class DeviceAcl(MongoMixin):
         }
 
 
-
 class Connections(MongoMixin):
     CLIENT = Mongo(settings.MONGO_URL, settings.MONGO_PORT)
     COLLECTION = CLIENT["mqtt"]["connections"]
+
     def __init__(self, client_id, connected,
                  device,
                  connected_at,
                  keepalive=60,
-                 ipaddress=""
+                 ipaddress="",
+                 proto_ver=0,
+                 conn_ack=0
                  ):
         self.client_id = client_id
         self.device = device
@@ -172,13 +209,16 @@ class Connections(MongoMixin):
         self.keepalive = keepalive
         self.ipaddress = ipaddress
         self.connected_at = connected_at
+        self.proto_ver = proto_ver
+        self.conn_ack = conn_ack
 
     def to_doc(self):
-        return {"client_id":self.client_id,
+        return {"client_id": self.client_id,
                 "device": self.device,
                 "connected": self.connected,
                 "connected_at": self.connected_at,
                 "keepalive": self.keepalive,
-                "ipaddress": self.ipaddress
+                "ipaddress": self.ipaddress,
+                "proto_ver": self.proto_ver,
+                "conn_ack": self.conn_ack
                 }
-

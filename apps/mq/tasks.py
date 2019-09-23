@@ -9,7 +9,7 @@ def disconnect_task(msg):
 def connect_task(msg):
     payload = bson.decode(msg.body)
     print("connected...  msg: %s" % (payload))
-    Device.add_connection(msg)
+    Device.add_connection(payload)
 
 
 def msg_task(msg):

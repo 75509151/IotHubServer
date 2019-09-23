@@ -89,6 +89,10 @@ MONGO_URL = '127.0.0.1'
 MONGO_PORT = 27017
 
 
+EMQX_API_URL = "http://127.0.0.1:8080/api/v3/" 
+EMQX_API_ID = "iothub"
+EMQX_API_SECRET = "emqx"
+
 RABBIT_URL = "amqp://localhost:5672/"
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators

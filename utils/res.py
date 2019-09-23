@@ -33,6 +33,7 @@ class JsonResponse(Response):
             data["code"] = code
         if msg is not None:
             data["msg"] = msg
+        self.data =data
         self.template_name = template_name
         self.exception = exception
         self.content_type = content_type

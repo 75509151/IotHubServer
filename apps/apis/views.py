@@ -1,6 +1,7 @@
 import shortuuid
 
 
+from bson.objectid import ObjectId
 from django.shortcuts import render
 from django.conf import settings
 from rest_framework import viewsets
@@ -17,8 +18,17 @@ from .serializers import DeviceSerializer
 
 class DeviceView(mixins.CreateModelMixin,
                 mixins.ListModelMixin,
+                mixins.RetrieveModelMixin,
                 mixins.DestroyModelMixin,
                 viewsets.GenericViewSet):
+
+    def retrieve(self, request, *args, **kwargs):
+        device = Device.find_one({"_id":ObjectId( kwargs["pk"])})
+        if device:
+            serialized = DeviceSerializer(device)
+            return JsonResponse(serialized.data)
+        else:
+            return NotFound()
 
     def list(self, request):
         filter_params = ["product_name", "device_name",

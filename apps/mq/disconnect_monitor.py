@@ -4,8 +4,8 @@ from kombu.mixins import ConsumerMixin
 from kombu.log import get_logger
 from kombu.utils.functional import reprcall
 
-from .tasks import msg_task
-from .mqtt_queues import publish_queue
+from .tasks import disconnect_task
+from .mqtt_queues import disconnect_queue
 
 logger = get_logger(__name__)
 
@@ -16,11 +16,11 @@ class Worker(ConsumerMixin):
         self.connection = connection
 
     def get_consumers(self, Consumer, channel):
-        return [Consumer(queues=publish_queue,
+        return [Consumer(queues=disconnect_queue,
                          on_message = self.handle_message)]
 
     def handle_message(self, msg):
-        msg_task(msg)
+        disconnect_task(msg)
         msg.ack()
 
 def monitor():
