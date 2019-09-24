@@ -34,9 +34,11 @@ class MongoMixin():
 
     @classmethod
     def replace_one(cls, filter, replacement, upsert=False):
-
         return cls.COLLECTION.replace_one(filter, replacement, upsert)
 
+    @classmethod
+    def update_one(cls, filter, replacement, upsert=False):
+        return cls.COLLECTION.update_one(filter, replacement, upsert)
 
 class DeviceManager():
     # TODO: device manager
@@ -139,7 +141,7 @@ class Device(MongoMixin):
                    "ipaddress": msg["ipaddress"],
                    "proto_ver": msg["proto_ver"]
                    }
-            Connections.replace_one(device._id, conn, upsert=True)
+            Connections.update_one({"device":device._id}, {"$set": conn}, upsert=True)
 
     @classmethod
     def remove_connection(cls, msg):
@@ -157,7 +159,7 @@ class Device(MongoMixin):
                     "device": device._id,
                     "connected": False,
                     "disconnected_at": msg["disconnected_at"]}
-            Connections.replace_one(device._id, conn, upsert=True)
+            Connections.update_one({"device":device._id},{"$set": conn}, upsert=True)
 
     def disconnect(self):
         if self._id:

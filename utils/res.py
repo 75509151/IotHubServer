@@ -28,7 +28,9 @@ class JsonResponse(Response):
             )
             raise AssertionError(msg)
 
-        data = {"data": data}
+        data = {} if code or code or msg else None
+        if data:
+            data["data"] = data
         if code is not None:
             data["code"] = code
         if msg is not None:
