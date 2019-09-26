@@ -4,7 +4,7 @@ from kombu.mixins import ConsumerMixin
 from kombu.log import get_logger
 from kombu.utils.functional import reprcall
 
-from .tasks import msg_task
+from .tasks import app
 from .mqtt_queues import publish_queue
 
 logger = get_logger(__name__)
@@ -20,7 +20,8 @@ class Worker(ConsumerMixin):
                          on_message = self.handle_message)]
 
     def handle_message(self, msg):
-        msg_task(msg)
+        payload = bson.decode(msg.body)
+        app.do(payload, payload["topic"], _type="rule")
         msg.ack()
 
 def monitor():

@@ -11,6 +11,8 @@
             "program": "${workspaceFolder}/manage.py",
             "args": [
                 "monitor",
+                "--type" ,
+                "publish"
             ],
             "django": true
         },

@@ -4,7 +4,7 @@ from kombu.mixins import ConsumerMixin
 from kombu.log import get_logger
 from kombu.utils.functional import reprcall
 
-from .tasks import connect_task
+from .tasks import app
 from .mqtt_queues import connect_queue
 
 logger = get_logger(__name__)
@@ -20,7 +20,7 @@ class Worker(ConsumerMixin):
                          on_message = self.handle_message)]
 
     def handle_message(self, msg):
-        connect_task(msg)
+        app.do(msg, "connect")
         msg.ack()
 
 def monitor():
