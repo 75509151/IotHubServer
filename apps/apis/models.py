@@ -125,7 +125,15 @@ class Device(MongoMixin):
 
     @classmethod
     def add_connection(cls, msg):
-        product_name, device_name = msg.get("username", "").split("/")
+        username = msg.get("username", "")
+        if not username:
+            return
+
+        try:
+            product_name, device_name = username.split("/")
+        except ValueError:
+            return
+
         if not product_name or device_name:
             return
         condition = {"product_name": product_name,
@@ -145,7 +153,14 @@ class Device(MongoMixin):
 
     @classmethod
     def remove_connection(cls, msg):
-        product_name, device_name = msg.get("username", "").split("/")
+        username = msg.get("username", "")
+        if not username:
+            return
+
+        try:
+            product_name, device_name = username.split("/")
+        except ValueError:
+            return
         if not product_name or device_name:
             return
 
