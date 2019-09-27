@@ -1,52 +1,47 @@
-from collections import defaultdict
-import re
+import bson
 
-class MQApp(object):
+from kombu.mixins import ConsumerMixin
+from kombu.log import get_logger
+from kombu.utils.functional import reprcall
+
+from .tasks import app
+from .mqtt_queues import publish_queue
+
+logger = get_logger(__name__)
 
 
-    def __init__(self):
-        super(MQApp,self).__init__()
-        self._rule_task_map = defaultdict()
-        self._direct_task_map = defaultdict()
+class Worker(ConsumerMixin):
 
-    def route(self, _type, rule, **options):
-        def decorator(f):
-            self.add_task_rule(_type, rule, f, **options)
-            return f
-         
-        return decorator
+    def __init__(self, connection, queue, handler):
+        self.connection = connection
+        self.queue = queue
+        self.handler = handler
 
-    def add_task_rule(self, task, rule, _type, **options):
-        assert _type in ("", "direct", "route")
-        if _type in ("", "direct"):
-            self._direct_task_map[rule] = task
+    def get_consumers(self, Consumer, channel):
+        return [Consumer(queues=self.queue,
+                         on_message = self.handle_message)]
 
-        elif _type == "rule":
-            self._rule_task_map.setdefault(_type, {})
-            self._rule_task_map[_type][rule] = task
+    def handle_message(self, msg):
+        self.handler(msg)
+        msg.ack()
 
-    def do(self, msg, rule, _type=""):
-        task = None
-        if _type in ("", "direct"):
-            task = self._direct_task_map.get(rule, None)
-            if task:
-                return task(msg)
-        elif _type == "rule":
-            match = None
-            for task_rule, _task in self._rule_task_map.items():
-                match = re.match(task_rule, rule)
-                if match:
-                    task = _task
-                    break
-            if task:
-                if match:
-                    return task(msg, *match.groups())
-                else:
-                    return task(msg)
-        
-        else:
-            raise TypeError("rule type error")
+def handle_msg(msg):
+    payload = bson.decode(msg.body)
+    app.do(payload, payload["topic"], _type="rule")
 
-        return None
+def monitor():
+    from kombu import Connection
+    from kombu.utils.debug import setup_logging
+    # setup root logger
+    setup_logging(loglevel='INFO', loggers=[''])
 
+    with Connection('amqp://guest:guest@localhost:5672//') as conn:
+        try:
+            worker = Worker(conn, publish_queue, handle_msg)
+            worker.run()
+        except KeyboardInterrupt:
+            print('bye bye')
+
+if __name__ == '__main__':
+    monitor()
 

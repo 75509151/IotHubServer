@@ -1,7 +1,10 @@
 import bson
+import json
 import re
 from apis.models import Device
 from .mq_app import MQApp
+from .publisher import publish
+from .mqtt_queues import *
 
 __all__ = ["app"]
 
@@ -22,12 +25,16 @@ def connect_task(msg):
     
 @app.route(_type="rule", rule="^upload_data/(?P<product_name>.*?)/(?P<device_name>.*?)/(?P<_type>.*?)/(?P<msg_id>.*?$)")
 def upload_data_task(msg, product_name, device_name, _type, msg_id):
+    publish(str(msg), upload_data_queue.exchange,
+            upload_data_queue.routing_key, AMQ_URI)
     print("upload_data: %s" % (msg["payload"]))
     return
 
 @app.route(_type="rule", rule="^update_status/(?P<product_name>.*?)/(?P<device_name>.*?)/(?P<msg_id>.*?$)")
 def update_status_task(msg, product_name, device_name, msg_id):
     print("update_status: %s" % msg["payload"])
+    publish(str(msg), upload_status_queue.exchange,
+            upload_status_queue.routing_key, AMQ_URI)
     return
 
 @app.route(_type="rule", rule="^get/(?P<product_name>.*?)/(?P<device_name>.*?)/(?P<_type>.*?)/(?P<msg_id>.*?$)")
@@ -43,6 +50,7 @@ def rpc_resp_task(msg, product_name, device_name, _type, msg_id):
 @app.route(_type="rule", rule="^cmd_resp/(?P<product_name>.*?)/(?P<device_name>.*?)/(?P<_type>.*?)/(?P<msg_id>.*?$)")
 def cmd_resp_task(msg, product_name, device_name, _type, msg_id):
     print("cmd_resp: %s" % msg["payload"])
+    publish(msg, cmd_res_queue.exchange, cmd_res_queue.routing_key,AMQ_URI)
     return
 
 @app.route(_type="rule", rule="^m2m/(?P<product_name>.*?)/(?P<sender_device>.*?)/(?P<device_name>.*?)/(?P<msg_id>.*?$)")
